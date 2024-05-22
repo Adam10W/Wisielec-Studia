@@ -3,63 +3,119 @@ import java.util.Scanner;
 
 public class wisielec {
     private String haslo;
-    private String podaneLitery;
-    private String odgadnieteLitery = "";
+
+    private String uzyteLitery = "";
     private int liczbaProb = 0;
     private final int maksymalnaIloscProb = 10;
 
+    private long stoperStart;
+    private long stoperStop;
+
+    private static int liczbaZwyciestw = 0;
+    private static int liczbaPorazek = 0;
+
 // _______________________________________________________________
 
-    public void rozpocznijGre() {
-        haslo = losujSlowo();
-        System.out.println("Witaj w grze Wisielec!");
-        wyswietlStanGry();
-
+    public void startGry() {
         Scanner scanner = new Scanner(System.in);
-        while (!wygrana(haslo, odgadnieteLitery) && !przegrana(liczbaProb)) {
+        int poziomTrudnosci = wybierzPoziomTrudnosci(scanner);
+
+        haslo = losujSlowo(poziomTrudnosci);
+        wyswietlStanGry();
+        stoperStart = System.nanoTime();
+
+        while (!wygrana(haslo, uzyteLitery) && !przegrana(liczbaProb)) {
             System.out.print("Podaj literę: ");
             String input = scanner.nextLine().toLowerCase();
 
             if (input.length() != 1 || !Character.isLetter(input.charAt(0))) {
                 System.out.println("Podaj pojedynczą literę!");
+                System.out.println("__________________________");
                 continue;
             }
 
             char litera = input.charAt(0);
-            if (odgadnieteLitery.contains(String.valueOf(litera))) {
+            if (uzyteLitery.contains(String.valueOf(litera))) {
                 System.out.println("Ta litera została już podana!");
+                System.out.println("__________________________");
                 continue;
             }
 
-            odgadnieteLitery += litera;
+            uzyteLitery += litera;
             if (czyJestLitera(haslo, litera)) {
                 System.out.println("Zgadłeś literę!");
+                System.out.println("__________________________");
             } else {
                 System.out.println("Nie ma tej litery w haśle.");
+                System.out.println("__________________________");
                 liczbaProb++;
             }
 
             wyswietlStanGry();
         }
+        stoperStop = System.nanoTime();
 
-        if (wygrana(haslo, odgadnieteLitery)) {
-            System.out.println("Gratulacje, wygrałeś! Hasło to: " + haslo);
+        if (wygrana(haslo, uzyteLitery)) {
+            System.out.println("Wygrałeś! Hasło to: " + haslo);
+            liczbaZwyciestw++;
         } else {
             System.out.println("Przegrałeś! Poprawne hasło to: " + haslo);
+            liczbaPorazek++;
         }
+        wyswietlStatystyki();
         scanner.close();
     }
 
+    // ___________________________________
+
+    private void wyswietlStatystyki() {
+        long czasGry = (stoperStop - stoperStart) / 1_000_000_000; 
+        System.out.println("Statystyki gry:");
+        System.out.println("Czas: " + czasGry + " s");
+        if (czasGry < 20) {
+            System.out.println("Jesteś szybki jak struś! Pytanie tylko czy celnie trafiasz!");
+        }
+        System.out.println("Liczba prób: " + liczbaProb);
+        System.out.println("Użyte litery: " + uzyteLitery);
+        System.out.println("Zwycięstwa: " + liczbaZwyciestw);
+        System.out.println("Porażki: " + liczbaPorazek);
+    }
+
+    // ___________________________________
+
+
+    private int wybierzPoziomTrudnosci(Scanner scanner) {
+        System.out.println("Wybierz poziom trudności:");
+        System.out.println("1:Łatwy");
+        System.out.println("2:Średni");
+        System.out.println("3:Trudny");
+        int poziom = 0;
+        while (poziom < 1 || poziom > 3) {
+            System.out.print("Podaj numer poziomu (1-3): ");
+            if (scanner.hasNextInt()) {
+                poziom = scanner.nextInt();
+            }
+            scanner.nextLine();
+            if (poziom < 1 || poziom > 3) {
+                System.out.println("Niepoprawny numer poziomu, wybierz pomiędzy 1 a 3.");
+            }
+        }
+        return poziom;
+    }
+
+
+    // ___________________________________
+
     private void wyswietlStanGry() {
         System.out.println("Hasło: " + ukryjNieodgadnieteLitery());
-        System.out.println("Zgadnięte litery: " + odgadnieteLitery);
+        System.out.println("Użyte litery: " + uzyteLitery);
         System.out.println("Liczba prób: " + liczbaProb + "/" + maksymalnaIloscProb);
     }
 
     private String ukryjNieodgadnieteLitery() {
         StringBuilder result = new StringBuilder();
         for (char c : haslo.toCharArray()) {
-            if (odgadnieteLitery.contains(String.valueOf(c))) {
+            if (uzyteLitery.contains(String.valueOf(c))) {
                 result.append(c);
             } else {
                 result.append('_');
@@ -70,21 +126,39 @@ public class wisielec {
     }
 //  ____________________________________
 
-    private String[] slowa = {"samolot", "blok", "kaszanka", "elokwencja", "telekomunikacja", "polowanie", "komputer", "drzewo", "dostawa", "telekomunikacja", "kolorowanka", "tulipan", "korona", "sukienka", "pszenica", "sport", "dziecko", "ryba", "niebo", "chmury"}; 
+    private String[] latweSlowa = {"samolot", "blok", "komputer", "drzewo", "dostawa", "tulipan", "korona", "sukienka", "pszenica", "sport", "dziecko", "ryba", "niebo", "chmury"}; 
+    
+    private String[] srednieSlowa = {"kaszanka", "polowanie", "komputer", "kolorowanka", "tortury", "emigrant", "magazyn"}; 
+    
+    private String[] trudneSlowa = {"elokwencja", "telekomunikacja", "certyfikat", "wartownik", "przedsionek", "zmartwienie"}; 
 
-    private String losujSlowo() {
+    private String losujSlowo(int poziomTrudnosci) {
         Random rand = new Random();
-        int index = rand.nextInt(slowa.length);
-        return slowa[index]; 
+        String[] wybranaTablica;
+        switch (poziomTrudnosci) {
+            case 1:
+            wybranaTablica = latweSlowa;
+                break;
+            case 2:
+            wybranaTablica = srednieSlowa;
+                break;
+            case 3:
+            wybranaTablica = trudneSlowa;
+                break;
+            default:
+                throw new IllegalArgumentException("Niepoprawny poziom trudności");
+        }
+        int index = rand.nextInt(wybranaTablica.length);
+        return wybranaTablica[index];
     }
 
     private boolean czyJestLitera(String slowa, char litera) {
         return slowa.indexOf(litera) != -1; //
     }
 
-    private boolean wygrana(String haslo, String odgadnieteLitery) {
+    private boolean wygrana(String haslo, String uzyteLitery) {
         for (int i = 0; i < haslo.length(); i++) {
-            if (!odgadnieteLitery.contains(String.valueOf(haslo.charAt(i)))) {
+            if (!uzyteLitery.contains(String.valueOf(haslo.charAt(i)))) {
                 return false;
             }
         }
