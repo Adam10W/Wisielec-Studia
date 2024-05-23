@@ -14,11 +14,17 @@ public class wisielec {
     private static int liczbaZwyciestw = 0;
     private static int liczbaPorazek = 0;
 
+    
+    private Scanner scanner;
+
+    public wisielec(Scanner scanner) {
+        this.scanner = scanner;
+    }
+
 // _______________________________________________________________
 
     public void startGry() {
-        Scanner scanner = new Scanner(System.in);
-        int poziomTrudnosci = wybierzPoziomTrudnosci(scanner);
+        int poziomTrudnosci = wybierzPoziomTrudnosci();
 
         haslo = losujSlowo(poziomTrudnosci);
         wyswietlStanGry();
@@ -63,7 +69,6 @@ public class wisielec {
             liczbaPorazek++;
         }
         wyswietlStatystyki();
-        scanner.close();
     }
 
     // ___________________________________
@@ -84,7 +89,7 @@ public class wisielec {
     // ___________________________________
 
 
-    private int wybierzPoziomTrudnosci(Scanner scanner) {
+    private int wybierzPoziomTrudnosci() {
         System.out.println("Wybierz poziom trudności:");
         System.out.println("1:Łatwy");
         System.out.println("2:Średni");
@@ -92,12 +97,10 @@ public class wisielec {
         int poziom = 0;
         while (poziom < 1 || poziom > 3) {
             System.out.print("Podaj numer poziomu (1-3): ");
-            if (scanner.hasNextInt()) {
-                poziom = scanner.nextInt();
-            }
-            scanner.nextLine();
-            if (poziom < 1 || poziom > 3) {
-                System.out.println("Niepoprawny numer poziomu, wybierz pomiędzy 1 a 3.");
+            try {
+                poziom = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Niepoprawny wybór. Spróbuj ponownie.");
             }
         }
         return poziom;
