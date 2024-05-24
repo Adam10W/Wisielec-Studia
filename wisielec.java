@@ -6,7 +6,7 @@ public class wisielec {
 
     private String uzyteLitery = "";
     private int liczbaProb = 0;
-    private final int maksymalnaIloscProb = 10;
+    private int maksymalnaIloscProb;
 
     private long stoperStart;
     private long stoperStop;
@@ -24,9 +24,10 @@ public class wisielec {
 // _______________________________________________________________
 
     public void startGry() {
+        int jezyk = wybierzJezyk();
         int poziomTrudnosci = wybierzPoziomTrudnosci();
 
-        haslo = losujSlowo(poziomTrudnosci);
+        haslo = losujSlowo(jezyk);
         wyswietlStanGry();
         stoperStart = System.nanoTime();
 
@@ -74,7 +75,7 @@ public class wisielec {
     // ___________________________________
 
     private void wyswietlStatystyki() {
-        long czasGry = (stoperStop - stoperStart) / 1_000_000_000; 
+        long czasGry = (stoperStop - stoperStart) / 1000000000; 
         System.out.println("Statystyki gry:");
         System.out.println("Czas: " + czasGry + " s");
         if (czasGry < 20) {
@@ -89,23 +90,52 @@ public class wisielec {
     // ___________________________________
 
 
+    private int wybierzJezyk() {
+        System.out.println("Wybierz język słów:");
+        System.out.println("1:Polski");
+        System.out.println("2:Angielski");
+        System.out.println("3:Niemiecki");
+        int wybranyJezyk = 0;
+        while (wybranyJezyk < 1 || wybranyJezyk > 3) {
+            System.out.print("Podaj numer języka (1-3): ");
+            try {
+                wybranyJezyk = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Niepoprawny wybór.");
+            }
+        }
+        return wybranyJezyk;
+    }
+
     private int wybierzPoziomTrudnosci() {
         System.out.println("Wybierz poziom trudności:");
-        System.out.println("1:Łatwy");
-        System.out.println("2:Średni");
-        System.out.println("3:Trudny");
+        System.out.println("1: Łatwy (12 prób)");
+        System.out.println("2: Średni (10 prób)");
+        System.out.println("3: Trudny (6 prób)");
         int poziom = 0;
         while (poziom < 1 || poziom > 3) {
-            System.out.print("Podaj numer poziomu (1-3): ");
+            System.out.print("Podaj numer poziomu trudności (1-3): ");
             try {
                 poziom = Integer.parseInt(scanner.nextLine());
+                switch(poziom) {
+                    case 1:
+                        maksymalnaIloscProb = 12;
+                        break;
+                    case 2:
+                        maksymalnaIloscProb = 10;
+                        break;
+                    case 3:
+                        maksymalnaIloscProb = 6;
+                        break;
+                    default:
+                        System.out.println("Niepoprawny wybór. Spróbuj ponownie.");
+                }
             } catch (NumberFormatException e) {
                 System.out.println("Niepoprawny wybór. Spróbuj ponownie.");
             }
         }
         return poziom;
     }
-
 
     // ___________________________________
 
@@ -129,31 +159,33 @@ public class wisielec {
     }
 //  ____________________________________
 
-    private String[] latweSlowa = {"samolot", "blok", "komputer", "drzewo", "dostawa", "tulipan", "korona", "sukienka", "pszenica", "sport", "dziecko", "ryba", "niebo", "chmury"}; 
+    private String[] polskieSlowa = {"samolot", "blok", "komputer", "drzewo", "dostawa", "tulipan", "korona", "sukienka", "pszenica", "sport", "dziecko", "ryba", "niebo", "chmury"}; 
     
-    private String[] srednieSlowa = {"kaszanka", "polowanie", "komputer", "kolorowanka", "tortury", "emigrant", "magazyn"}; 
+    private String[] angielskieSlowa = {"favourite", "meet", "describe", "fundation", "work", "mood", "inspire"}; 
     
-    private String[] trudneSlowa = {"elokwencja", "telekomunikacja", "certyfikat", "wartownik", "przedsionek", "zmartwienie"}; 
+    private String[] niemieckieSlowa = {"frau", "mensch", "haus", "prozent", "stadt", "schule"}; 
 
-    private String losujSlowo(int poziomTrudnosci) {
+    private String losujSlowo(int jezyk) {
         Random rand = new Random();
         String[] wybranaTablica;
-        switch (poziomTrudnosci) {
+        switch (jezyk) {
             case 1:
-            wybranaTablica = latweSlowa;
+            wybranaTablica = polskieSlowa;
                 break;
             case 2:
-            wybranaTablica = srednieSlowa;
+            wybranaTablica = angielskieSlowa;
                 break;
             case 3:
-            wybranaTablica = trudneSlowa;
+            wybranaTablica = niemieckieSlowa;
                 break;
             default:
-                throw new IllegalArgumentException("Niepoprawny poziom trudności");
+                throw new IllegalArgumentException("Niepoprawny język");
         }
         int index = rand.nextInt(wybranaTablica.length);
         return wybranaTablica[index];
     }
+
+    
 
     private boolean czyJestLitera(String slowa, char litera) {
         return slowa.indexOf(litera) != -1; //
